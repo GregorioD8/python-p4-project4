@@ -1,8 +1,55 @@
 import React, { useEffect, useState } from "react";
-import { Switch, Route } from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+import Clients from "./Clients";
+import Coaches from "./Coaches";
+import Sessions from "./Sessions";
+import Home from "./Home";
 
 function App() {
-  return <h1>Project Client</h1>;
+  const [clients, setClients] = useState([]);
+  const [coaches, setCoaches] = useState([]);
+  const [sessions, setSessions] = useState([]);
+
+  useEffect(() => {
+    fetch("http://127.0.0.1:5000/clients")
+      .then(response => response.json())
+      .then(data => setClients(data))
+      .catch(error => console.error("Error fetching clients:", error));
+
+    fetch("http://127.0.0.1:5000/coaches")
+      .then(response => response.json())
+      .then(data => setCoaches(data))
+      .catch(error => console.error("Error fetching coaches:", error));
+
+    fetch("http://127.0.0.1:5000/sessions")
+      .then(response => response.json())
+      .then(data => setSessions(data))
+      .catch(error => console.error("Error fetching sessions:", error));
+  }, []);
+
+  return (
+    <Router>
+      <nav>
+        <Link to="/">Home</Link> | <Link to="/clients">Clients</Link> | <Link to="/coaches">Coaches</Link> | <Link to="/sessions">Sessions</Link>
+      </nav>
+      <Switch>
+        <Route exact path="/">
+          <Home />
+        </Route>
+        <Route path="/clients">
+          <Clients clients={clients} />
+        </Route>
+        <Route path="/coaches">
+          <Coaches coaches={coaches} />
+        </Route>
+        ######################################
+        <Route path="/sessions">
+          <Sessions sessions={sessions} clients={clients} coaches={coaches} />
+        </Route>
+        ######################################
+      </Switch>
+    </Router>
+  );
 }
 
 export default App;
