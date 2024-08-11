@@ -2,9 +2,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
-import os
-from models import db, Client, Coach, Session
 from datetime import datetime
+from models import db, Client, Coach, Session
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -29,8 +28,8 @@ class Clients(Resource):
             clients = Client.query.all()
             new_clients = [c.to_dict(only=('id', 'name', 'goals')) for c in clients]
             return new_clients, 200
-        except:
-            return {'error': 'Bad request'}, 400
+        except Exception as e:
+            return {'error': 'Bad request', 'message': str(e)}, 400
 
     def post(self):
         try:
@@ -41,8 +40,8 @@ class Clients(Resource):
             db.session.add(new_client)
             db.session.commit()
             return new_client.to_dict(only=('id', 'name', 'goals')), 201
-        except:
-            return {'errors': ['validation errors']}, 400
+        except Exception as e:
+            return {'errors': ['validation errors', str(e)]}, 400
 
 api.add_resource(Clients, '/clients')
 
@@ -53,8 +52,8 @@ class ClientsById(Resource):
             if not client:
                 return {'error': 'Client not found'}
             return client.to_dict(only=('id', 'name', 'goals', 'sessions')), 200
-        except:
-            return {'error': 'Client not found'}, 404
+        except Exception as e:
+            return {'error': 'Client not found', 'message': str(e)}, 404
 
     def patch(self, id):
         try:
@@ -66,8 +65,8 @@ class ClientsById(Resource):
                 setattr(client, key, value)
             db.session.commit()
             return client.to_dict(only=('id', 'name', 'goals', 'sessions')), 200
-        except:
-            return {'errors': ['validation errors']}, 400
+        except Exception as e:
+            return {'errors': ['validation errors', str(e)]}, 400
 
     def delete(self, id):
         try:
@@ -77,8 +76,8 @@ class ClientsById(Resource):
             db.session.delete(client)
             db.session.commit()
             return {}, 204
-        except:
-            return {'error': 'Client not found'}, 404
+        except Exception as e:
+            return {'error': 'Client not found', 'message': str(e)}, 404
 
 api.add_resource(ClientsById, '/clients/<int:id>')
 
@@ -87,8 +86,8 @@ class Coaches(Resource):
         try:
             coaches = [coach.to_dict(only=('id', 'name', 'specialization')) for coach in Coach.query.all()]
             return coaches, 200
-        except:
-            return {'error': 'Bad request'}, 400
+        except Exception as e:
+            return {'error': 'Bad request', 'message': str(e)}, 400
 
 api.add_resource(Coaches, '/coaches')
 
@@ -97,14 +96,21 @@ class Sessions(Resource):
         try:
             sessions = Session.query.all()
             return [session.to_dict() for session in sessions], 200
-        except:
-            return {'error': 'Bad request'}, 400
+        except Exception as e:
+            return {'error': 'Bad request', 'message': str(e)}, 400
 
     def post(self):
         try:
+            # Log the incoming data
+            print("Received data:", request.json)
+
+            # Parse the combined date and time string directly
+            date_time_str = request.json['date']
+            date_time_obj = datetime.strptime(date_time_str, '%Y-%m-%d %H:%M')
+            print("Parsed datetime object:", date_time_obj)
+
             session = Session(
-                date=datetime.strptime(request.json['date'], '%Y-%m-%d %H:%M:%S'),
-                name=request.json['name'],
+                date=date_time_obj,
                 client_id=request.json['client_id'],
                 coach_id=request.json['coach_id'],
                 notes=request.json['notes'],
@@ -113,10 +119,31 @@ class Sessions(Resource):
             db.session.add(session)
             db.session.commit()
             return session.to_dict(), 201
-        except:
-            return {'errors': ['validation errors']}, 400
+        except Exception as e:
+            # Log the error
+            print("Error:", str(e))
+            return {'errors': ['validation errors', str(e)]}, 400
 
 api.add_resource(Sessions, '/sessions')
 
+#### Route for listing clients of a specific coach ####
+@app.route('/coaches/<int:coach_id>/clients')
+def get_clients_for_coach(coach_id):
+    try:
+        coach = Coach.query.get_or_404(coach_id)
+        clients = [client.to_dict(only=('id', 'name')) for client in coach.clients]
+        return jsonify(clients), 200
+    except Exception as e:
+        return {'error': 'Bad request', 'message': str(e)}, 400
+
+@app.route('/coaches/<int:coach_id>/sessions')
+def get_sessions_for_coach(coach_id):
+    try:
+        coach = Coach.query.get_or_404(coach_id)
+        sessions = [session.to_dict() for session in coach.sessions]
+        return jsonify(sessions), 200
+    except Exception as e:
+        return {'error': 'Bad request', 'message': str(e)}, 400
+    
 if __name__ == '__main__':
     app.run(port=5000)

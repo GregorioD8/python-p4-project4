@@ -4,6 +4,7 @@ import Clients from "./Clients";
 import Coaches from "./Coaches";
 import Sessions from "./Sessions";
 import Home from "./Home";
+import CoachDashboard from "./CoachDashboard";
 
 function App() {
   const [clients, setClients] = useState([]);
@@ -30,7 +31,11 @@ function App() {
   return (
     <Router>
       <nav>
-        <Link to="/">Home</Link> | <Link to="/clients">Clients</Link> | <Link to="/coaches">Coaches</Link> | <Link to="/sessions">Sessions</Link>
+        <Link to="/">Home</Link> | 
+        <Link to="/clients">Clients</Link> | 
+        <Link to="/coaches">Coaches</Link> | 
+        <Link to="/sessions">Sessions</Link> |
+        <Link to="/coach-dashboard">Coach Dashboard</Link>
       </nav>
       <Switch>
         <Route exact path="/">
@@ -42,10 +47,11 @@ function App() {
         <Route path="/coaches">
           <Coaches coaches={coaches} />
         </Route>
-        ######################################
         <Route path="/sessions">
           <Sessions sessions={sessions} clients={clients} coaches={coaches} />
         </Route>
+        ######################################
+        <Route path="/coach-dashboard" component={CoachDashboard} />
         ######################################
       </Switch>
     </Router>

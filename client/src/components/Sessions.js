@@ -12,6 +12,7 @@ function Sessions({ sessions, clients, coaches }) {
     const coach = coaches.find((coach) => coach.id === id); 
     return coach ? coach.name : "Unknown Coach";
   };
+
   return (
     <div>
       <h1>Sessions</h1>
