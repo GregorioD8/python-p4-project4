@@ -89,6 +89,18 @@ class Coaches(Resource):
         except Exception as e:
             return {'error': 'Bad request', 'message': str(e)}, 400
 
+    def post(self):
+        try:
+            new_coach = Coach(
+                name=request.json['name'],
+                specialization=request.json['specialization']
+            )
+            db.session.add(new_coach)
+            db.session.commit()
+            return new_coach.to_dict(only=('id', 'name', 'specialization')), 201
+        except Exception as e:
+            return {'errors': ['validation errors', str(e)]}, 400
+
 api.add_resource(Coaches, '/coaches')
 
 class Sessions(Resource):
@@ -126,24 +138,51 @@ class Sessions(Resource):
 
 api.add_resource(Sessions, '/sessions')
 
+class SessionsById(Resource):
+    def patch(self, session_id):
+        try:
+            session = Session.query.get_or_404(session_id)
+            data = request.json
+            for key, value in data.items():
+                setattr(session, key, value)
+            db.session.commit()
+            return session.to_dict(), 200
+        except Exception as e:
+            return {'errors': ['validation errors', str(e)]}, 400
+
+    def delete(self, session_id):
+        try:
+            session = Session.query.get_or_404(session_id)
+            db.session.delete(session)
+            db.session.commit()
+            return {}, 204
+        except Exception as e:
+            return {'error': 'Session not found', 'message': str(e)}, 404
+
+api.add_resource(SessionsById, '/sessions/<int:session_id>')
+
 #### Route for listing clients of a specific coach ####
 @app.route('/coaches/<int:coach_id>/clients')
 def get_clients_for_coach(coach_id):
     try:
-        coach = Coach.query.get_or_404(coach_id)
-        clients = [client.to_dict(only=('id', 'name')) for client in coach.clients]
-        return jsonify(clients), 200
+        # Fetch distinct clients who have had sessions with the selected coach
+        clients = db.session.query(Client).join(Session).filter(Session.coach_id == coach_id).distinct().all()
+        client_list = [client.to_dict(only=('id', 'name')) for client in clients]
+        return jsonify(client_list), 200
     except Exception as e:
         return {'error': 'Bad request', 'message': str(e)}, 400
 
 @app.route('/coaches/<int:coach_id>/sessions')
 def get_sessions_for_coach(coach_id):
     try:
-        coach = Coach.query.get_or_404(coach_id)
-        sessions = [session.to_dict() for session in coach.sessions]
-        return jsonify(sessions), 200
+        client_id = request.args.get('client_id')
+        query = db.session.query(Session, Client).join(Client, Session.client_id == Client.id).filter(Session.coach_id == coach_id)
+        
+        if client_id:
+            query = query.filter(Session.client_id == client_id)
+        
+        sessions = query.all()
+        session_list = [{'id': s.Session.id, 'date': s.Session.date.strftime('%Y-%m-%d %H:%M:%S'), 'client_name': s.Client.name, 'notes': s.Session.notes, 'goal_progress': s.Session.goal_progress} for s in sessions]
+        return jsonify(session_list), 200
     except Exception as e:
         return {'error': 'Bad request', 'message': str(e)}, 400
-    
-if __name__ == '__main__':
-    app.run(port=5000)
