@@ -4,10 +4,7 @@ from config import db
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from sqlalchemy.orm import validates
-from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy_serializer import SerializerMixin
 from datetime import datetime
-
 
 convention = {
     "ix": "ix_%(column_0_label)s",
@@ -58,6 +55,7 @@ class CoachClient(db.Model, SerializerMixin):
     client = db.relationship('Client', backref='coach_clients')
 
     serialize_rules = ('-coach.coach_clients', '-client.coach_clients')
+
 class Session(db.Model, SerializerMixin):
     __tablename__ = 'sessions'
 
@@ -70,35 +68,49 @@ class Session(db.Model, SerializerMixin):
     client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
 
     serialize_rules = ('-client.sessions', '-coach.sessions')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'date': self.date.strftime('%Y-%m-%d %H:%M:%S'),
+            'notes': self.notes,
+            'goal_progress': self.goal_progress,
+            'coach_id': self.coach_id,
+            'client_id': self.client_id,
+        }
     
     @validates('date')
     def validate_date(self, key, date):
-        print('Inside the date validation')
-        if not date:
-            raise ValueError('Date must exist')
+        print(f'Validating date: {date}')
+        if isinstance(date, str):
+            try:
+                date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+            except ValueError as e:
+                raise ValueError(f"Date format error: {str(e)}")
+        elif not isinstance(date, datetime):
+            raise ValueError('Invalid date format. It must be a datetime object or a properly formatted string.')
         return date
 
     @validates('client_id')
     def validate_client_id(self, key, client_id):
-        print('Inside the client_id validation')
+        print(f'Validating client_id: {client_id}')
         if not client_id:
-            raise ValueError('must enter a client_id')
+            raise ValueError('Client ID must exist')
         return client_id
     
     @validates('coach_id')
     def validate_coach_id(self, key, coach_id):
-        print('Inside the coach_id validation')
+        print(f'Validating coach_id: {coach_id}')
         if not coach_id:
-            raise ValueError('must enter a coach_id')
+            raise ValueError('Coach ID must exist')
         return coach_id
 
     @validates('goal_progress')
     def validate_goal_progress(self, key, goal_progress):
+        print(f'Validating goal_progress: {goal_progress}')
         if not (1 <= goal_progress <= 10):
-            raise ValueError('goal_progress must be between 1 and 10')
+            raise ValueError('Goal progress must be between 1 and 10')
         return goal_progress
-
- 
 
     def __repr__(self):
         return f'Session {self.id}: {self.date}, client: {self.client_id}, coach: {self.coach_id}'

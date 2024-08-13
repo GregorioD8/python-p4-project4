@@ -2,8 +2,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
-from datetime import datetime
 from models import db, Client, Coach, Session, CoachClient
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -20,7 +20,7 @@ api = Api(app)
 
 @app.route('/')
 def home():
-    return 'Welcome to the Coaching App'
+    return ''
 
 class Clients(Resource):
     def get(self):
@@ -103,42 +103,6 @@ class Coaches(Resource):
 
 api.add_resource(Coaches, '/coaches')
 
-class CoachesById(Resource):
-    def get(self, id):
-        try:
-            coach = Coach.query.filter_by(id=id).first()
-            if not coach:
-                return {'error': 'Coach not found'}, 404
-            return coach.to_dict(only=('id', 'name', 'specialization', 'clients', 'sessions')), 200
-        except Exception as e:
-            return {'error': 'Coach not found', 'message': str(e)}, 404
-
-    def patch(self, id):
-        try:
-            coach = Coach.query.filter_by(id=id).first()
-            if not coach:
-                return {'error': 'Coach not found'}, 404
-            data = request.json
-            for key, value in data.items():
-                setattr(coach, key, value)
-            db.session.commit()
-            return coach.to_dict(only=('id', 'name', 'specialization', 'clients', 'sessions')), 200
-        except Exception as e:
-            return {'errors': ['validation errors', str(e)]}, 400
-
-    def delete(self, id):
-        try:
-            coach = Coach.query.filter_by(id=id).first()
-            if not coach:
-                return {'error': 'Coach not found'}, 404
-            db.session.delete(coach)
-            db.session.commit()
-            return {}, 204
-        except Exception as e:
-            return {'error': 'Coach not found', 'message': str(e)}, 404
-
-api.add_resource(CoachesById, '/coaches/<int:id>')
-
 class Sessions(Resource):
     def get(self):
         try:
@@ -149,8 +113,8 @@ class Sessions(Resource):
                     'date': session.date.strftime('%Y-%m-%d %H:%M:%S'),
                     'notes': session.notes,
                     'goal_progress': session.goal_progress,
-                    'coach': session.coach.to_dict(only=('id', 'name')),
-                    'client': session.client.to_dict(only=('id', 'name'))
+                    'coach_name': session.coach.name,  # Include coach name here
+                    'client_name': session.client.name,  # Include client name here
                 }
                 for session in sessions
             ]
@@ -159,18 +123,31 @@ class Sessions(Resource):
             return {'error': 'Bad request', 'message': str(e)}, 400
 
     def post(self):
+        data = request.json
+
         try:
+            date_str = data.get('date')
+            datetime_obj = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+
             new_session = Session(
-                date=datetime.strptime(request.json['date'], '%Y-%m-%d %H:%M:%S'),
-                notes=request.json['notes'],
-                goal_progress=request.json['goal_progress'],
-                coach_id=request.json['coach_id'],
-                client_id=request.json['client_id']
+                date=datetime_obj,
+                notes=data['notes'],
+                goal_progress=data['goal_progress'],
+                coach_id=data['coach_id'],
+                client_id=data['client_id']
             )
             db.session.add(new_session)
             db.session.commit()
-            return new_session.to_dict(), 201
+            return {
+                'id': new_session.id,
+                'date': new_session.date.strftime('%Y-%m-%d %H:%M:%S'),
+                'notes': new_session.notes,
+                'goal_progress': new_session.goal_progress,
+                'coach_name': new_session.coach.name,  # Include coach name here
+                'client_name': new_session.client.name,  # Include client name here
+            }, 201
         except Exception as e:
+            print("Error when creating a new session:", str(e))
             return {'errors': ['validation errors', str(e)]}, 400
 
 api.add_resource(Sessions, '/sessions')
@@ -206,11 +183,12 @@ class SessionsById(Resource):
 
 api.add_resource(SessionsById, '/sessions/<int:session_id>')
 
+#### Route for listing clients of a specific coach ####
 @app.route('/coaches/<int:coach_id>/clients')
 def get_clients_for_coach(coach_id):
     try:
-        coach_clients = CoachClient.query.filter_by(coach_id=coach_id).all()
-        client_list = [cc.client.to_dict(only=('id', 'name')) for cc in coach_clients]
+        clients = db.session.query(Client).join(CoachClient).filter(CoachClient.coach_id == coach_id).distinct().all()
+        client_list = [client.to_dict(only=('id', 'name')) for client in clients]
         return jsonify(client_list), 200
     except Exception as e:
         return {'error': 'Bad request', 'message': str(e)}, 400
@@ -232,14 +210,14 @@ def get_sessions_for_coach(coach_id):
             'id': s.Session.id,
             'date': s.Session.date.strftime('%Y-%m-%d %H:%M:%S'),
             'client_name': s.Client.name,
-            'coach_name': s.Coach.name,  # Include coach name
+            'coach_name': s.Coach.name,
             'notes': s.Session.notes,
             'goal_progress': s.Session.goal_progress
         } for s in sessions]
         return jsonify(session_list), 200
     except Exception as e:
         return {'error': 'Bad request', 'message': str(e)}, 400
-
+    
 class CoachClientResource(Resource):
     def get(self):
         try:
