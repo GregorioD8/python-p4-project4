@@ -28,14 +28,11 @@ class Coach(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     specialization = db.Column(db.String)
-
+    
     sessions = db.relationship('Session', cascade='all,delete', backref='coach')
-    clients = association_proxy('sessions', 'client')
+    clients = association_proxy('coach_clients', 'client')
 
-    serialize_rules = ('-sessions.coach',)
-
-    def __repr__(self):
-        return f'<Coach {self.id}: {self.name}, specialization: {self.specialization}>'
+    serialize_rules = ('-sessions.coach', '-coach_clients.coach')
 
 class Client(db.Model, SerializerMixin):
     __tablename__ = 'clients'
@@ -43,28 +40,24 @@ class Client(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     goals = db.Column(db.String)
-
+    
     sessions = db.relationship('Session', cascade='all,delete', backref='client')
-    
-    serialize_rules = ('-sessions.client',)
+    coaches = association_proxy('coach_clients', 'coach')
 
-    @validates('name')
-    def validate_name(self, key, name):
-        print('Inside the name validation')
-        if not name or len(name) < 1:
-            raise ValueError('Name must exist')
-        return name
-    
-    @validates('goals')
-    def validate_goals(self, key, goals):
-        print('Inside the goals validation')
-        if not goals or len(goals) < 1:
-            raise ValueError('must enter a goal')
-        return goals
-    
-    def __repr__(self):
-        return f'<Client {self.id}: {self.name}, field: {self.goals}>'
+    serialize_rules = ('-sessions.client', '-coach_clients.client')
 
+class CoachClient(db.Model, SerializerMixin):
+    __tablename__ = 'coach_clients'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    coach_id = db.Column(db.Integer, db.ForeignKey('coaches.id'), nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
+    notes = db.Column(db.String)  # Example of a user-submittable attribute
+    
+    coach = db.relationship('Coach', backref='coach_clients')
+    client = db.relationship('Client', backref='coach_clients')
+
+    serialize_rules = ('-coach.coach_clients', '-client.coach_clients')
 class Session(db.Model, SerializerMixin):
     __tablename__ = 'sessions'
 
