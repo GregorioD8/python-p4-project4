@@ -107,34 +107,20 @@ class Sessions(Resource):
     def get(self):
         try:
             sessions = Session.query.all()
-            return [session.to_dict() for session in sessions], 200
+            session_data = [
+                {
+                    'id': session.id,
+                    'date': session.date.strftime('%Y-%m-%d %H:%M:%S'),
+                    'notes': session.notes,
+                    'goal_progress': session.goal_progress,
+                    'coach': session.coach.to_dict(only=('id', 'name')),
+                    'client': session.client.to_dict(only=('id', 'name'))
+                }
+                for session in sessions
+            ]
+            return session_data, 200
         except Exception as e:
             return {'error': 'Bad request', 'message': str(e)}, 400
-
-    def post(self):
-        try:
-            # Log the incoming data
-            print("Received data:", request.json)
-
-            # Parse the combined date and time string directly
-            date_time_str = request.json['date']
-            date_time_obj = datetime.strptime(date_time_str, '%Y-%m-%d %H:%M')
-            print("Parsed datetime object:", date_time_obj)
-
-            session = Session(
-                date=date_time_obj,
-                client_id=request.json['client_id'],
-                coach_id=request.json['coach_id'],
-                notes=request.json['notes'],
-                goal_progress=request.json['goal_progress']
-            )
-            db.session.add(session)
-            db.session.commit()
-            return session.to_dict(), 201
-        except Exception as e:
-            # Log the error
-            print("Error:", str(e))
-            return {'errors': ['validation errors', str(e)]}, 400
 
 api.add_resource(Sessions, '/sessions')
 
@@ -146,7 +132,15 @@ class SessionsById(Resource):
             for key, value in data.items():
                 setattr(session, key, value)
             db.session.commit()
-            return session.to_dict(), 200
+            session_data = {
+                'id': session.id,
+                'date': session.date.strftime('%Y-%m-%d %H:%M:%S'),
+                'notes': session.notes,
+                'goal_progress': session.goal_progress,
+                'coach': session.coach.to_dict(only=('id', 'name')),
+                'client': session.client.to_dict(only=('id', 'name'))
+            }
+            return session_data, 200
         except Exception as e:
             return {'errors': ['validation errors', str(e)]}, 400
 
@@ -158,6 +152,7 @@ class SessionsById(Resource):
             return {}, 204
         except Exception as e:
             return {'error': 'Session not found', 'message': str(e)}, 404
+
 
 api.add_resource(SessionsById, '/sessions/<int:session_id>')
 
@@ -176,13 +171,23 @@ def get_clients_for_coach(coach_id):
 def get_sessions_for_coach(coach_id):
     try:
         client_id = request.args.get('client_id')
-        query = db.session.query(Session, Client).join(Client, Session.client_id == Client.id).filter(Session.coach_id == coach_id)
+        query = db.session.query(Session, Client, Coach)\
+                          .join(Client, Session.client_id == Client.id)\
+                          .join(Coach, Session.coach_id == Coach.id)\
+                          .filter(Session.coach_id == coach_id)
         
         if client_id:
             query = query.filter(Session.client_id == client_id)
         
         sessions = query.all()
-        session_list = [{'id': s.Session.id, 'date': s.Session.date.strftime('%Y-%m-%d %H:%M:%S'), 'client_name': s.Client.name, 'notes': s.Session.notes, 'goal_progress': s.Session.goal_progress} for s in sessions]
+        session_list = [{
+            'id': s.Session.id,
+            'date': s.Session.date.strftime('%Y-%m-%d %H:%M:%S'),
+            'client_name': s.Client.name,
+            'coach_name': s.Coach.name,  # Include coach name
+            'notes': s.Session.notes,
+            'goal_progress': s.Session.goal_progress
+        } for s in sessions]
         return jsonify(session_list), 200
     except Exception as e:
         return {'error': 'Bad request', 'message': str(e)}, 400
