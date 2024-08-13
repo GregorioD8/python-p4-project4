@@ -9,7 +9,7 @@ function Sessions({ sessions, clients, coaches }) {
   };
 
   const getCoachNameById = (id) => {
-    const coach = coaches.find((coach) => coach.id === id); 
+    const coach = coaches.find((coach) => coach.id === id);
     return coach ? coach.name : "Unknown Coach";
   };
 
@@ -27,10 +27,11 @@ function Sessions({ sessions, clients, coaches }) {
           <button onClick={() => setSelectedSession(null)}>Back</button>
         </div>
       ) : (
-        <ul>
+        <ul style={{ listStyleType: "none", padding: 0 }}>
           {sessions.map((session) => (
-            <li key={session.id}>
-              {session.date} <button onClick={() => setSelectedSession(session)}>View</button>
+            <li key={session.id} style={{ marginBottom: "10px" }}>
+              <button onClick={() => setSelectedSession(session)}>View</button>
+              {` Coach: ${getCoachNameById(session.coach_id)}, Client: ${getClientNameById(session.client_id)}, Date: ${session.date}`}
             </li>
           ))}
         </ul>

@@ -1,11 +1,19 @@
 import React, { useState } from "react";
+import CoachesForm from "./CoachesForm";
 
-function Coaches({ coaches }) {
+function Coaches({ coaches, onCoachAdded }) {
   const [selectedCoach, setSelectedCoach] = useState(null);
+
+  const handleCoachAdded = (newCoach) => {
+    // Update the coaches list in the parent component
+    onCoachAdded(newCoach);
+    setSelectedCoach(null); // Reset selection after adding
+  };
 
   return (
     <div>
       <h1>Coaches</h1>
+      <CoachesForm onSubmitSuccess={handleCoachAdded} />
       {selectedCoach ? (
         <div>
           <h2>{selectedCoach.name}</h2>
@@ -14,7 +22,7 @@ function Coaches({ coaches }) {
         </div>
       ) : (
         <ul>
-          {coaches.map(coach => (
+          {coaches.map((coach) => (
             <li key={coach.id}>
               {coach.name} <button onClick={() => setSelectedCoach(coach)}>View</button>
             </li>

@@ -28,31 +28,37 @@ function App() {
       .catch(error => console.error("Error fetching sessions:", error));
   }, []);
 
+  const onClientAdded = (newClient) => {
+    setClients([...clients, newClient]);
+  };
+
+  const onCoachAdded = (newCoach) => {
+    setCoaches([...coaches, newCoach]);
+  };
+
   return (
     <Router>
       <nav>
-        <Link to="/">Home</Link> | 
-        <Link to="/clients">Clients</Link> | 
-        <Link to="/coaches">Coaches</Link> | 
-        <Link to="/sessions">Sessions</Link> |
-        <Link to="/coach-dashboard">Coach Dashboard</Link>
+        <Link to="/"> Home </Link> |
+        <Link to="/clients"> Clients </Link> | 
+        <Link to="/coaches"> Coaches </Link> | 
+        <Link to="/sessions"> Sessions </Link> |
+        <Link to="/coach-dashboard"> Coach Dashboard </Link>
       </nav>
       <Switch>
         <Route exact path="/">
           <Home />
         </Route>
         <Route path="/clients">
-          <Clients clients={clients} />
+          <Clients clients={clients} onClientAdded={onClientAdded} />
         </Route>
         <Route path="/coaches">
-          <Coaches coaches={coaches} />
+          <Coaches coaches={coaches} onCoachAdded={onCoachAdded} />
         </Route>
         <Route path="/sessions">
           <Sessions sessions={sessions} clients={clients} coaches={coaches} />
         </Route>
-        ######################################
         <Route path="/coach-dashboard" component={CoachDashboard} />
-        ######################################
       </Switch>
     </Router>
   );
