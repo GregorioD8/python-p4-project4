@@ -24,8 +24,8 @@ function CoachesForm({ onSubmitSuccess }) {
       })
         .then((res) => res.json())
         .then((newCoach) => {
-          onSubmitSuccess(newCoach); // Notify parent component of new coach
-          formik.resetForm(); // Clear the form fields
+          onSubmitSuccess(newCoach); 
+          formik.resetForm(); 
         })
         .catch((error) => console.error("Error adding coach:", error));
     },
@@ -59,7 +59,6 @@ function CoachesForm({ onSubmitSuccess }) {
       <br/>
       <button type="submit">Add Coach</button>
     </form>
-    
   );
 }
 

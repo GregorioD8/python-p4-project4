@@ -5,9 +5,8 @@ function Coaches({ coaches, onCoachAdded }) {
   const [selectedCoach, setSelectedCoach] = useState(null);
 
   const handleCoachAdded = (newCoach) => {
-    // Update the coaches list in the parent component
     onCoachAdded(newCoach);
-    setSelectedCoach(null); // Reset selection after adding
+    setSelectedCoach(null);
   };
 
   return (

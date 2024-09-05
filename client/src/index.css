@@ -1,7 +1,106 @@
-:root {
-  --bg: #282c34;
-  --header: #fff;
-  --link: #61dafb;
-  --text: hsla(0, 0%, 100%, 0.88);
+/* Apply the background color to the entire body */
+body {
+  background-color: #EAE4DD !important; /* Cream background with high specificity */
+  color: #333333; /* Dark gray text */
 }
 
+/* Container background to make sure nothing else overrides */
+.container {
+  background-color: inherit; /* Inherit background color from the body */
+  padding: 20px;
+}
+
+/* Titles and headings */
+h1, h2 {
+  color: #333333 !important; /* Dark gray headings */
+}
+
+/* Form labels and table headers */
+.form-label, th {
+  color: #333333 !important; /* Dark gray text */
+}
+
+/* Primary buttons */
+.btn-primary {
+  background-color: #5DA3A6 !important; /* Muted teal */
+  border-color: #5DA3A6 !important;
+}
+
+.btn-primary:hover {
+  background-color: #4A8E8C !important; /* Darker teal on hover */
+}
+
+/* Danger buttons (e.g., delete buttons) */
+.btn-danger {
+  background-color: #CBB982 !important; /* Soft gold */
+  border-color: #CBB982 !important;
+  color: #333333 !important; /* Dark gray text for readability */
+}
+
+.btn-danger:hover {
+  background-color: #B89F6F !important; /* Darker gold on hover */
+}
+
+/* Table styling */
+.table {
+  border-color: #AAAAAA !important; /* Light gray borders */
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: #FFFFFF !important; /* White for odd rows */
+}
+
+.table-striped > tbody > tr:nth-of-type(even) {
+  background-color: #F5F5F5 !important; /* Slightly lighter cream for even rows */
+}
+
+.table-responsive {
+  border: 1px solid #AAAAAA !important; /* Light gray border around table */
+  border-radius: 10px !important; /* Rounded corners for a clean look */
+}
+
+.fc {
+  background-color: #FFFFFF !important; /* White background */
+  border-radius: 10px; /* Rounded corners */
+  padding: 10px; /* Space inside the calendar */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Light shadow for a more polished look */
+}
+
+button[type="submit"] {
+  background-color: #FFFFFF; /* No background color */
+  border: 2px solid #AAAAAA; /* Light gray border */
+  color: #333333; /* Dark gray text */
+  border-radius: 8px; /* Rounded corners */
+  padding: 8px 16px; /* Padding for the button */
+  font-size: 16px; /* Adjust font size */
+  cursor: pointer; /* Pointer cursor on hover */
+  transition: background-color 0.3s, color 0.3s; /* Smooth transition */
+}
+
+/* Hover effect for the Submit button */
+button[type="submit"]:hover {
+  background-color: #F5F5F5; /* Light background color on hover */
+  color: #333333; /* Keep dark text color */
+}
+
+.get-started-btn {
+  background-color: #4A8E8C !important; /* Teal color */
+  color: white !important; /* White text */
+  border: none !important; /* No border */
+  padding: 10px 20px !important; /* Padding for button */
+  font-size: 1.2rem !important; /* Font size */
+  border-radius: 5px !important; /* Rounded corners */
+  cursor: pointer !important; /* Pointer cursor on hover */
+}
+
+.get-started-btn:hover {
+  background-color: #5DA3A6 !important; /* Lighter teal on hover */
+}
+
+.coach-image {
+  border-radius: 50%; /* Makes the image circular */
+  object-fit: cover;
+  height: 150px;
+  width: 150px;
+  margin: 0 auto;
+}

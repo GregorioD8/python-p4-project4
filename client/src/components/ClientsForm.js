@@ -22,8 +22,8 @@ const ClientsForm = ({ onSubmitSuccess }) => {
       })
         .then(res => res.json())
         .then(newClient => {
-          onSubmitSuccess(newClient); // Notify parent component of new client
-          formik.resetForm(); // Clear the form fields
+          onSubmitSuccess(newClient);
+          formik.resetForm();
         })
         .catch(error => console.error("Error adding client:", error));
     },

@@ -1,357 +1,163 @@
-# Phase 4 Full-Stack Application Project Template
+# Phase 5 Flask + React Project
 
-## Learning Goals
+### `What I learned`
 
-- Discuss the basic directory structure of a full-stack Flask/React application.
-- Carry out the first steps in creating your Phase 4 project.
+- How to build a full-stack web application using Flask for the backend and React for the frontend.
+- Integrating Flask with SQLAlchemy as the ORM to interact with a database:
+    1. Choose an ORM library: `SQLAlchemy`
+    2. Install the ORM library: `pip install flask_sqlalchemy`
+    3. Configure the database connection: `app.py --> app.config['SQLALCHEMY_DATABASE_URI']`
+    4. Define models and relationships: `Created Python classes to define tables and relationships`
+    
+# By using an ORM you can interact with your database using Python objects, making it easier to manage complex data models and CRUD operations.
 
----
-
-## Introduction
-
-Fork and clone this lesson for a template for your full-stack application. Take
-a look at the directory structure before we begin (NOTE: node_modules will be
-generated in a subsequent step):
+This is the directory structure:
 
 ```console
-$ tree -L 2
-$ # the -L argument limits the depth at which we look into the directory structure
-.
-├── CONTRIBUTING.md
-├── LICENSE.md
-├── Pipfile
-├── README.md
 ├── client
-│   ├── README.md
-│   ├── package.json
 │   ├── public
+│   │   ├── images
+│   │   │   ├── coaches: folder to store coach profile images
+│   │   └── index.html
 │   └── src
-└── server
-    ├── app.py
-    ├── config.py
-    ├── models.py
-    └── seed.py
+│       ├── components
+│       │   ├── App.js
+│       │   ├── AuthContext.js
+│       │   ├── Calendar.js
+│       │   ├── Clients.js
+│       │   ├── ClientsForm.js
+│       │   ├── CoachDashboard.js
+│       │   ├── Coaches.js
+│       │   ├── CoachesForm.js
+│       │   ├── Home.js
+│       │   ├── Login.js
+│       │   ├── Navbar.js
+│       │   ├── PrivateRoute.js
+│       │   ├── SessionForm.js
+│       │   ├── Sessions.js
+│       └── index.js
+├── server
+│   ├── app.py
+│   ├── models.py
+│   ├── config.py
+│   └── seed.py
+└── app.db # SQLite database
 ```
+### `Setup`
 
-A `migrations` folder will be added to the `server` directory in a later step.
+# Run cd client to cd into the client folder /client
+cd client
 
-The `client` folder contains a basic React application, while the `server`
-folder contains a basic Flask application. You will adapt both folders to
-implement the code for your project .
+# Run npm install to install React dependencies
+npm install
 
-NOTE: If you did not previously install `tree` in your environment setup, MacOS
-users can install this with the command `brew install tree`. WSL and Linux users
-can run `sudo apt-get install tree` to download it as well.
+# Run npm start to start the frontend React application
+npm start
 
-## Where Do I Start?
+# Navigate to the server folder /server
+cd ../server 
 
-Just as with your Phase 3 Project, this will likely be one of the biggest
-projects you've undertaken so far. Your first task should be creating a Git
-repository to keep track of your work and roll back any undesired changes.
+# Run python seed.py to seed the database
+delete app.db then run python seed.py
 
-### Removing Existing Git Configuration
+# Run flask run to start the Flask backend server
+flask run
 
-If you're using this template, start off by removing the existing metadata for
-Github and Canvas. Run the following command to carry this out:
+### `Running the Application`
 
 ```console
-$ rm -rf .git .canvas
+└── Main Menu (Frontend - React)
+    ├── View Coaches
+    ├── Log in as a Coach
+    └── Schedule a Session (Once logged in)
+
+        └── Coach Dashboard
+        ├── View Coach Profile and Sessions
+        ├── Schedule new sessions
+        └── Update/Delete sessions  
 ```
 
-The `rm` command removes files from your computer's memory. The `-r` flag tells
-the console to remove _recursively_, which allows the command to remove
-directories and the files within them. `-f` removes them permanently.
+## Flask API, React Components, and Class relation 
 
-`.git` contains this directory's configuration to track changes and push to
-Github (you want to track and push _your own_ changes instead), and `.canvas`
-contains the metadata to create a Canvas page from your Git repo. You don't have
-the permissions to edit our Canvas course, so it's not worth keeping around.
+### Flask API
+In the backend, Flask serves as the API layer to handle requests and responses. The key routes are:
 
-### Creating Your Own Git Repo
+1. `/coaches`: 
+   - **GET**: Fetches all coaches.
+   - **POST**: Creates a new coach.
+   
+2. `/sessions`: 
+   - **GET**: Fetches all sessions.
+   - **POST**: Schedules a new session.
+   - **PATCH**: Updates session notes.
+   - **DELETE**: Deletes a session.
+   
+3. `/login`: 
+   - **POST**: Authenticates the coach by verifying their username and password.
 
-First things first- rename this directory! Once you have an idea for a name,
-move one level up with `cd ..` and run
-`mv python-p4-project-template <new-directory-name>` to change its name (replace
-<new-directory-name> with an appropriate project directory name).
+The Flask API interacts with the **SQLite** database via **SQLAlchemy**, which acts as the Object Relational Mapper (ORM). The key models in the database are `Coach`, `Client`, and `Session`, which represent the core data entities.
 
-> **Note: If you typed the `mv` command in a terminal within VS Code, you should
-> close VS Code then reopen it.**
+- **Coach**: 
+  Represents a coach in the application,including their name, specialization, and login credentials.
+  
+- **Client**: 
+  Represents a client who works with coaches in various sessions.
+  
+- **Session**: 
+  Represents a scheduled session between a coach and a client, including session notes and progress tracking.
 
-> **Note: `mv` actually stands for "move", but your computer interprets this
-> rename as a move from a directory with the old name to a directory with a new
-> name.**
+These models are managed in the Flask app using routes that provide CRUD (Create, Read, Update, Delete) functionality to the frontend React components.
 
-`cd` back into your new directory and run `git init` to create a local git
-repository. Add all of your local files to version control with `git add --all`,
-then commit them with `git commit -m'initial commit'`. (You can change the
-message here- this one is just a common choice.)
+### React Components
+The frontend is built in **React**, where components correspond to specific parts of the user interface. The React components communicate with the Flask API to retrieve or update data. Here's a brief overview of the main components:
 
-Navigate to [GitHub](https://github.com). In the upper-right corner of the page,
-click on the "+" dropdown menu, then select "New repository". Enter the name of
-your local repo, choose whether you would like it to be public or private, make
-sure "Initialize this repository with a README" is unchecked (you already have
-one), then click "Create repository".
+1. **App.js**: 
+   - The root component that contains the routing logic for different pages of the app. It integrates with `AuthContext.js` for managing authentication state (e.g., if a coach is logged in or not).
 
-Head back to the command line and enter
-`git remote add origin git@github.com:github-username/new-repository-name.git`.
-NOTE: Replace `github-username` with your github username, and
-`new-repository-name` with the name of your new repository. This command will
-map the remote repository to your local repository. Finally, push your first
-commit with `git push -u origin main`.
-
-Your project is now version-controlled locally and online. This will allow you
-to create different versions of your project and pick up your work on a
-different machine if the need arises.
-
----
-
-## Setup
-
-### `server/`
-
-The `server/` directory contains all of your backend code.
-
-`app.py` is your Flask application. You'll want to use Flask to build a simple
-API backend like we have in previous modules. You should use Flask-RESTful for
-your routes. You should be familiar with `models.py` and `seed.py` by now, but
-remember that you will need to use Flask-SQLAlchemy, Flask-Migrate, and
-SQLAlchemy-Serializer instead of SQLAlchemy and Alembic in your models.
-
-The project contains a default `Pipfile` with some basic dependencies. You may
-adapt the `Pipfile` if there are additional dependencies you want to add for
-your project.
-
-To download the dependencies for the backend server, run:
+2. **AuthContext.js**: 
+   - Manages authentication logic. It stores and provides the login state across components, ensuring that only logged-in users can access certain pages like the Coach Dashboard.
 
-```console
-pipenv install
-pipenv shell
-```
-
-You can run your Flask API on [`localhost:5555`](http://localhost:5555) by
-running:
+3. **CoachDashboard.js**: 
+   - The main dashboard for logged-in coaches. It displays scheduled sessions, allows coaches to add, edit, or delete sessions, and also shows the coach's profile picture.
 
-```console
-python server/app.py
-```
-
-Check that your server serves the default route `http://localhost:5555`. You
-should see a web page with the heading "Project Server".
-
-### `client/`
-
-The `client/` directory contains all of your frontend code. The file
-`package.json` has been configured with common React application dependencies,
-include `react-router-dom`. The file also sets the `proxy` field to forward
-requests to `"http://localhost:5555". Feel free to change this to another port-
-just remember to configure your Flask app to use another port as well!
-
-To download the dependencies for the frontend client, run:
-
-```console
-npm install --prefix client
-```
-
-You can run your React app on [`localhost:3000`](http://localhost:3000) by
-running:
-
-```sh
-npm start --prefix client
-```
-
-Check that your the React client displays a default page
-`http://localhost:3000`. You should see a web page with the heading "Project
-Client".
-
-## Generating Your Database
-
-NOTE: The initial project directory structure does not contain the `instance` or
-`migrations` folders. Change into the `server` directory:
-
-```console
-cd server
-```
-
-Then enter the commands to create the `instance` and `migrations` folders and
-the database `app.db` file:
-
-```
-flask db init
-flask db upgrade head
-```
-
-Type `tree -L 2` within the `server` folder to confirm the new directory
-structure:
-
-```console
-.
-├── app.py
-├── config.py
-├── instance
-│   └── app.db
-├── migrations
-│   ├── README
-│   ├── __pycache__
-│   ├── alembic.ini
-│   ├── env.py
-│   ├── script.py.mako
-│   └── versions
-├── models.py
-└── seed.py
-```
-
-Edit `models.py` and start creating your models. Import your models as needed in
-other modules, i.e. `from models import ...`.
-
-Remember to regularly run
-`flask db revision --autogenerate -m'<descriptive message>'`, replacing
-`<descriptive message>` with an appropriate message, and `flask db upgrade head`
-to track your modifications to the database and create checkpoints in case you
-ever need to roll those modifications back.
+4. **Coaches.js**: 
+   - Displays a list of all coaches, each with a profile picture and specialization. It pulls this data from the Flask API via a `GET` request to the `/coaches` route.
 
-> **Tip: It's always a good idea to start with an empty revision! This allows
-> you to roll all the way back while still holding onto your database. You can
-> create this empty revision with `flask db revision -m'Create DB'`.**
+5. **Clients.js**: 
+   - Shows a list of clients that the coach is working with. It retrieves client data from the Flask API.
 
-If you want to seed your database, now would be a great time to write out your
-`seed.py` script and run it to generate some test data. Faker has been included
-in the Pipfile if you'd like to use that library.
+6. **SessionForm.js**: 
+   - A form component that allows coaches to schedule new sessions with clients. It sends a `POST` request to the `/sessions` route to save the new session to the database.
 
----
+7. **Calendar.js**: 
+   - Uses a popular calendar library (such as FullCalendar) to render the coach's sessions visually in a calendar format.
 
-#### `config.py`
-
-When developing a large Python application, you might run into a common issue:
-_circular imports_. A circular import occurs when two modules import from one
-another, such as `app.py` and `models.py`. When you create a circular import and
-attempt to run your app, you'll see the following error:
+8. **Home.js**: 
+   - The homepage that includes an introductory section, a “Meet Our Coaches” section, and a call-to-action button to get started by viewing coaches or logging in.
 
-```console
-ImportError: cannot import name
-```
+9. **Login.js**: 
+   - A form that allows coaches to log into the application. It sends a `POST` request to the `/login` route on the Flask backend to authenticate the coach.
 
-If you're going to need an object in multiple modules like `app` or `db`,
-creating a _third_ module to instantiate these objects can save you a great deal
-of circular grief. Here's a good start to a Flask config file (you may need more
-if you intend to include features like authentication and passwords):
+10. **PrivateRoute.js**: 
+    - A wrapper for routes that should only be accessible to logged-in users. It checks the authentication state (provided by `AuthContext.js`) and redirects users to the login page if they are not authenticated.
 
-```py
-# Standard library imports
+11. **Navbar.js**: 
+    - The navigation bar that displays links to different parts of the aplication (e.g., Home, Coach Dashboard, Login). It changes based on whether a user is logged in or not.
 
-# Remote library imports
-from flask import Flask
-from flask_cors import CORS
-from flask_migrate import Migrate
-from flask_restful import Api
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import MetaData
+12. **ClientsForm.js**: 
+    - A form to add a new client to the database. It sends a `POST` request to the Flask backend to save the client information.
 
-# Local imports
+### Class Relation
+The database entities (i.e., `Coach`, `Client`, and `Session` models) map to their respective components on the front end:
 
-# Instantiate app, set attributes
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.json.compact = False
+1. **Coach** (Flask model) ↔ **Coaches.js** (React component)
+   - The `Coaches` component pulls data about each coach (name, specialization) from the Flask API and displays it, along with an image, to the user.
 
-# Define metadata, instantiate db
-metadata = MetaData(naming_convention={
-    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-})
-db = SQLAlchemy(metadata=metadata)
-migrate = Migrate(app, db)
-db.init_app(app)
+2. **Session** (Flask model) ↔ **SessionForm.js**, **CoachDashboard.js**, **Calendar.js** (React components)
+   - The `SessionForm` allows the coach to create new sessions, which are then stored in the database via the `Session` model.
+   - The `CoachDashboard` component retrieves the logged-in coach’s sessions and displays them in a table, and the `Calendar` component provides a visual display of all scheduled sessions.
 
-# Instantiate REST API
-api = Api(app)
+3. **Client** (Flask model) ↔ **Clients.js**, **ClientsForm.js** (React components)
+   - The `Clients` component retrieves and displays all the clients that a coach works with. The `ClientsForm` allows the coach to add new clients.
 
-# Instantiate CORS
-CORS(app)
-
-```
-
-Now let's review that last line...
-
-#### CORS
-
-CORS (Cross-Origin Resource Sharing) is a system that uses HTTP headers to
-determine whether resources from different servers-of-origin can be accessed. If
-you're using the fetch API to connect your frontend to your Flask backend, you
-need to configure CORS on your Flask application instance. Lucky for us, that
-only takes one line:
-
-```py
-CORS(app)
-
-```
-
-By default, Flask-CORS enables CORS on all routes in your application with all
-fetching servers. You can also specify the resources that allow CORS. The
-following specifies that routes beginning with `api/` allow CORS from any
-originating server:
-
-```py
-CORS(app, resources={r"/api/*": {"origins": "*"}})
-
-```
-
-You can also set this up resource-by-resource by importing and using the
-`@cross_origin` decorator:
-
-```py
-@app.route("/")
-@cross_origin()
-def howdy():
-  return "Howdy partner!"
-
-```
-
----
-
-## Updating Your README.md
-
-`README.md` is a Markdown file that describes your project. These files can be
-used in many different ways- you may have noticed that we use them to generate
-entire Canvas lessons- but they're most commonly used as homepages for online
-Git repositories. **When you develop something that you want other people to
-use, you need to have a README.**
-
-Markdown is not a language that we cover in Flatiron's Software Engineering
-curriculum, but it's not a particularly difficult language to learn (if you've
-ever left a comment on Reddit, you might already know the basics). Refer to the
-cheat sheet in this lesson's resources for a basic guide to Markdown.
-
-### What Goes into a README?
-
-This README should serve as a template for your own- go through the important
-files in your project and describe what they do. Each file that you edit (you
-can ignore your migration files) should get at least a paragraph. Each function
-should get a small blurb.
-
-You should descibe your application first, and with a good level of detail. The
-rest should be ordered by importance to the user. (Probably routes next, then
-models.)
-
-Screenshots and links to resources that you used throughout are also useful to
-users and collaborators, but a little more syntactically complicated. Only add
-these in if you're feeling comfortable with Markdown.
-
----
-
-## Conclusion
-
-A lot of work goes into a full-stack application, but it all relies on concepts
-that you've practiced thoroughly throughout this phase. Hopefully this template
-and guide will get you off to a good start with your Phase 4 Project.
-
-Happy coding!
-
----
-
-## Resources
-
-- [Setting up a respository - Atlassian](https://www.atlassian.com/git/tutorials/setting-up-a-repository)
-- [Create a repo- GitHub Docs](https://docs.github.com/en/get-started/quickstart/create-a-repo)
-- [Markdown Cheat Sheet](https://www.markdownguide.org/cheat-sheet/)
-- [Python Circular Imports - StackAbuse](https://stackabuse.com/python-circular-imports/)
-- [Flask-CORS](https://flask-cors.readthedocs.io/en/latest/)
+This relationship between the Flask models and React components helps ensure smooth data flow between the backend (API and database) and frontend (UI).

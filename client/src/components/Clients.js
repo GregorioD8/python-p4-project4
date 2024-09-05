@@ -5,9 +5,8 @@ function Clients({ clients, onClientAdded }) {
   const [selectedClient, setSelectedClient] = useState(null);
 
   const handleClientAdded = (newClient) => {
-    // Update the clients list in the parent component
     onClientAdded(newClient);
-    setSelectedClient(null); // Reset selection after adding
+    setSelectedClient(null);
   };
 
   return (

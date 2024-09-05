@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import Clients from "./Clients";
 import Coaches from "./Coaches";
 import Sessions from "./Sessions";
 import Home from "./Home";
 import CoachDashboard from "./CoachDashboard";
+import Login from "./Login";
+import Navbar from "./Navbar";
+import PrivateRoute from "./PrivateRoute";
 
 function App() {
   const [clients, setClients] = useState([]);
@@ -28,37 +31,35 @@ function App() {
       .catch(error => console.error("Error fetching sessions:", error));
   }, []);
 
-  const onClientAdded = (newClient) => {
-    setClients([...clients, newClient]);
-  };
-
-  const onCoachAdded = (newCoach) => {
-    setCoaches([...coaches, newCoach]);
-  };
-
   return (
     <Router>
-      <nav>
-        <Link to="/"> Home </Link> |
-        <Link to="/clients"> Clients </Link> | 
-        <Link to="/coaches"> Coaches </Link> | 
-        <Link to="/sessions"> Sessions </Link> |
-        <Link to="/coach-dashboard"> Coach Dashboard </Link>
-      </nav>
+      <Navbar />
       <Switch>
+        <Route path="/login">
+          <Login />
+        </Route>
         <Route exact path="/">
           <Home />
         </Route>
         <Route path="/clients">
-          <Clients clients={clients} onClientAdded={onClientAdded} />
+          <Clients clients={clients} />
         </Route>
         <Route path="/coaches">
-          <Coaches coaches={coaches} onCoachAdded={onCoachAdded} />
+          <Coaches coaches={coaches} />
         </Route>
         <Route path="/sessions">
           <Sessions sessions={sessions} clients={clients} coaches={coaches} />
         </Route>
-        <Route path="/coach-dashboard" component={CoachDashboard} />
+        <PrivateRoute
+          path="/coach-dashboard"
+          component={() => (
+            <CoachDashboard
+              clients={clients} 
+              sessions={sessions}
+              coaches={coaches}
+            />
+          )}
+        />
       </Switch>
     </Router>
   );
