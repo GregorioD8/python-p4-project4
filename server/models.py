@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from sqlalchemy.orm import validates
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 convention = {
     "ix": "ix_%(column_0_label)s",
@@ -17,19 +18,39 @@ convention = {
 metadata = MetaData(naming_convention=convention)
 db = SQLAlchemy(metadata=metadata)
 
-########################################
-
 class Coach(db.Model, SerializerMixin):
     __tablename__ = 'coaches'
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     specialization = db.Column(db.String)
+    username = db.Column(db.String, unique=True, nullable=False)
+    password_hash = db.Column(db.String, nullable=False)
     
     sessions = db.relationship('Session', cascade='all,delete', backref='coach')
     clients = association_proxy('coach_clients', 'client')
 
     serialize_rules = ('-sessions.coach', '-coach_clients.coach')
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.id)
 
 class Client(db.Model, SerializerMixin):
     __tablename__ = 'clients'
@@ -49,7 +70,7 @@ class CoachClient(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     coach_id = db.Column(db.Integer, db.ForeignKey('coaches.id'), nullable=False)
     client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
-    notes = db.Column(db.String)  # Example of a user-submittable attribute
+    notes = db.Column(db.String)  
     
     coach = db.relationship('Coach', backref='coach_clients')
     client = db.relationship('Client', backref='coach_clients')
@@ -81,7 +102,6 @@ class Session(db.Model, SerializerMixin):
     
     @validates('date')
     def validate_date(self, key, date):
-        print(f'Validating date: {date}')
         if isinstance(date, str):
             try:
                 date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
@@ -93,21 +113,18 @@ class Session(db.Model, SerializerMixin):
 
     @validates('client_id')
     def validate_client_id(self, key, client_id):
-        print(f'Validating client_id: {client_id}')
         if not client_id:
             raise ValueError('Client ID must exist')
         return client_id
     
     @validates('coach_id')
     def validate_coach_id(self, key, coach_id):
-        print(f'Validating coach_id: {coach_id}')
         if not coach_id:
             raise ValueError('Coach ID must exist')
         return coach_id
 
     @validates('goal_progress')
     def validate_goal_progress(self, key, goal_progress):
-        print(f'Validating goal_progress: {goal_progress}')
         if not (1 <= goal_progress <= 10):
             raise ValueError('Goal progress must be between 1 and 10')
         return goal_progress
