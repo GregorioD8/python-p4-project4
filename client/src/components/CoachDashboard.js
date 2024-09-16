@@ -67,85 +67,94 @@ const CoachDashboard = ({ clients }) => {
     fontSize: "16px",
   };
 
+  const innerBackgroundStyle = {
+    backgroundColor: "#f9f9f9", // Matching grey color for inner sections
+    padding: "20px",
+    borderRadius: "10px",
+  };
+
   return (
     <div className="container mt-4">
-      <h1 className="text-center mb-4">Coach Dashboard</h1>
+    <h1 className="text-center mb-4">Coach Dashboard</h1>
 
-      {/* Client Select Dropdown */}
-      <div className="row">
+    {/* Client Select Dropdown */}
+    <div className="row">
         <div className="col-md-4 mb-3">
-          <label htmlFor="clientSelect" className="form-label">Select Client</label>
-          <select
+        <label htmlFor="clientSelect" className="form-label">Select Client</label>
+        <select
             id="clientSelect"
             className="form-select"
             onChange={handleClientChange}
             value={selectedClient}
-          >
+        >
             <option value="" label="All Clients" />
             {clients.map(client => (
-              <option key={client.id} value={client.id}>
+            <option key={client.id} value={client.id}>
                 {client.name}
-              </option>
+            </option>
             ))}
-          </select>
+        </select>
         </div>
-      </div>
+    </div>
 
-      {/* grid for the form */}
-      <div className="row">
-        <div className="col-md-5"> 
-          <h2>Schedule a New Session</h2>
-          <SessionForm
+    {/* Form and Calendar Layout */}
+    <div className="row">
+        <div className="col-md-3"> 
+        <h2>Add Session</h2>
+        <SessionForm
             onSubmitSuccess={() => setRefreshPage(!refreshPage)}
             selectedCoach={coachId}
             selectedClient={selectedClient}
             clients={clients}
             submitButtonStyle={submitButtonStyle} 
-          />
+        />
         </div>
-        <div className="col-md-7"> {/*calendar width */}
-          <h2>Session Calendar</h2>
-          <Calendar sessions={sessions} />
+        <div className="col-md-9">
+        <h2>Session Calendar</h2>
+        <Calendar sessions={sessions} />
         </div>
-      </div>
-
-      {/* Sessions Table */}
-      <h2 className="mt-4">Scheduled Sessions</h2>
-      <div className="table-responsive" style={{ maxHeight: "300px", overflowY: "scroll" }}>
+    </div>
+            
+    {/* Sessions Table */}
+    <h2 className="mt-4">Scheduled Sessions</h2>
+    <div className="table-responsive">
         <table className="table table-striped">
-          <thead>
+        <thead>
             <tr>
-              <th>Client Name</th>
-              <th>Time</th>
-              <th>Notes</th>
-              <th>Actions</th>
+            <th>Client Name</th>
+            <th>Time</th>
+            <th>Notes</th>
+            <th>Actions</th>
             </tr>
-          </thead>
-          <tbody>
+        </thead>
+        <tbody>
             {sessions.length === 0 ? (
-              <tr>
+            <tr>
                 <td colSpan="4">No sessions scheduled.</td>
-              </tr>
+            </tr>
             ) : (
-              sessions.map((session, i) => (
+            sessions.map((session, i) => (
                 <tr key={i}>
-                  <td>{session.client_name}</td>
-                  <td>{session.date.split(" ")[0]} {session.date.split(" ")[1]}</td>
-                  <td>{session.notes}</td>
-                  <td>
+                <td>{session.client_name}</td>
+                <td>{session.date.split(" ")[0]} {session.date.split(" ")[1]}</td>
+                <td>{session.notes}</td>
+                <td>
                     <button className="btn btn-primary" onClick={() => handleUpdateNotes(session.id)}>
-                      Update
+                    Update
                     </button>
                     <button className="btn btn-danger ms-2" onClick={() => handleDeleteSession(session.id)}>
-                      Delete
+                    Delete
                     </button>
-                  </td>
+                </td>
                 </tr>
-              ))
+            ))
             )}
-          </tbody>
+        </tbody>
         </table>
-      </div>
+    </div>
+        <footer className="dashboard-footer">
+        &copy; 2024 Etherheal LLC. All rights reserved.
+        </footer>
     </div>
   );
 };

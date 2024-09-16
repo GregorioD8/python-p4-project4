@@ -69,7 +69,7 @@ const SessionForm = ({ onSubmitSuccess, selectedCoach, clients }) => {
   };
 
   return (
-    <div className="session-form-container" style={smallerFormContainerStyle}>
+    <div className="custom-shadow" style={smallerFormContainerStyle}> 
       <form onSubmit={formik.handleSubmit} style={formStyle}>
         <div style={formGroupStyle}>
           <label htmlFor="client_id" style={labelStyle}>Client</label>
@@ -166,14 +166,12 @@ const SessionForm = ({ onSubmitSuccess, selectedCoach, clients }) => {
 
 // form styling
 const smallerFormContainerStyle = {
-  border: "1px solid #ccc",
-  borderRadius: "10px",
   padding: "20px",
   marginBottom: "30px",
   backgroundColor: "#f9f9f9",
   width: "90%",
   maxWidth: "500px",
-  margin: "0 auto",
+  margin: "0", // Align to the left
 };
 
 const formStyle = {

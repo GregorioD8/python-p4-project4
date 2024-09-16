@@ -92,7 +92,7 @@ function Home() {
       </section>
 
       {/* Footer Section */}
-      <footer className="bg-dark text-white text-center py-4">
+      <footer className="text-white text-center py-4">
         <div className="container">
           <p>&copy; 2024 Etherheal. All rights reserved.</p>
         </div>
