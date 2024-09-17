@@ -252,6 +252,22 @@ class CoachClientResource(Resource):
 
 api.add_resource(CoachClientResource, '/coach_clients')
 
+@app.route('/sessions/<int:session_id>/pay', methods=['POST'])
+def pay_for_session(session_id):
+    try:
+        # Find the session by ID
+        session = Session.query.get_or_404(session_id)
+
+        # Mark the session as paid
+        session.paid_status = True
+
+        # Commit the change to the database
+        db.session.commit()
+
+        return jsonify({'message': 'Payment successful', 'paid_status': session.paid_status}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.json
