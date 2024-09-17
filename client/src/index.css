@@ -121,7 +121,7 @@ button[type="submit"]:hover, .get-started-btn:hover {
   font-size: 16px;
   border-radius: 8px; 
   cursor: pointer;
-  box-shadow: 1px !important; 
+  box-shadow: none !important; 
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
