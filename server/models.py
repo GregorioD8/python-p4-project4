@@ -84,6 +84,7 @@ class Session(db.Model, SerializerMixin):
     date = db.Column(db.DateTime, default=datetime.utcnow)
     notes = db.Column(db.String)
     goal_progress = db.Column(db.Integer)
+    paid_status = db.Column(db.Boolean, default=False)  # Add this line
 
     coach_id = db.Column(db.Integer, db.ForeignKey('coaches.id'), nullable=False)
     client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
@@ -96,6 +97,7 @@ class Session(db.Model, SerializerMixin):
             'date': self.date.strftime('%Y-%m-%d %H:%M:%S'),
             'notes': self.notes,
             'goal_progress': self.goal_progress,
+            'paid_status': self.paid_status,  # Add this line
             'coach_id': self.coach_id,
             'client_id': self.client_id,
         }

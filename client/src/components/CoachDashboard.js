@@ -80,7 +80,7 @@ const CoachDashboard = ({ clients }) => {
       })
       .catch((error) => console.error("Error processing payment:", error));
   };
-  
+
   const handleCancelPayment = () => {
     setPaymentSession(null);
   };

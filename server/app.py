@@ -267,6 +267,7 @@ def pay_for_session(session_id):
         return jsonify({'message': 'Payment successful', 'paid_status': session.paid_status}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+    
 
 @app.route('/login', methods=['POST'])
 def login():
