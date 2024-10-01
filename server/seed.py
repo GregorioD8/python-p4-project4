@@ -42,30 +42,33 @@ def create_clients():
 
 def create_sessions(coaches, clients):
     base_sessions = [
-        Session(date=datetime(2024, 9, 25, 9, 0), client_id=clients[0].id, coach_id=coaches[0].id, notes="Got better at boundaries", goal_progress=8),
-        Session(date=datetime(2024, 9, 25, 10, 0), client_id=clients[1].id, coach_id=coaches[1].id, notes="Got back with abusive ex", goal_progress=6),
-        Session(date=datetime(2024, 9, 25, 1, 0), client_id=clients[2].id, coach_id=coaches[2].id, notes="Got stronger socially", goal_progress=4),
-        Session(date=datetime(2024, 9, 19, 9, 0), client_id=clients[3].id, coach_id=coaches[0].id, notes="Working on setting boundaries", goal_progress=7),
-        Session(date=datetime(2024, 9, 19, 10, 0), client_id=clients[4].id, coach_id=coaches[0].id, notes="Building confidence", goal_progress=9),
-        Session(date=datetime(2024, 9, 20, 11, 0), client_id=clients[5].id, coach_id=coaches[1].id, notes="Coping with social anxiety", goal_progress=6),
-        Session(date=datetime(2024, 9, 20, 9, 0), client_id=clients[6].id, coach_id=coaches[1].id, notes="Recovering from trauma", goal_progress=8),
-        Session(date=datetime(2024, 9, 21, 10, 0), client_id=clients[7].id, coach_id=coaches[2].id, notes="Managing chronic stress", goal_progress=7),
-        Session(date=datetime(2024, 9, 21, 11, 0), client_id=clients[8].id, coach_id=coaches[2].id, notes="Enhancing focus", goal_progress=8),
-        Session(date=datetime(2024, 9, 22, 9, 0), client_id=clients[9].id, coach_id=coaches[3].id, notes="Overcoming fear of public speaking", goal_progress=6),
-        Session(date=datetime(2024, 9, 22, 10, 0), client_id=clients[10].id, coach_id=coaches[3].id, notes="Developing mindfulness habits", goal_progress=9),
-        Session(date=datetime(2024, 9, 23, 11, 0), client_id=clients[11].id, coach_id=coaches[4].id, notes="Working through childhood trauma", goal_progress=8),
-        Session(date=datetime(2024, 9, 23, 9, 0), client_id=clients[12].id, coach_id=coaches[4].id, notes="Healing from abusive relationship", goal_progress=7),
-        Session(date=datetime(2024, 9, 24, 10, 0), client_id=clients[13].id, coach_id=coaches[5].id, notes="Managing anxiety from past experiences", goal_progress=6),
-        Session(date=datetime(2024, 9, 24, 11, 0), client_id=clients[14].id, coach_id=coaches[5].id, notes="Improving stress management", goal_progress=9),
-    ]
+        Session(date=datetime(2024, 10, 25, 9, 0), client_id=clients[0].id, coach_id=coaches[0].id, notes="Got better at boundaries", goal_progress=8),
+        Session(date=datetime(2024, 10, 25, 10, 0), client_id=clients[1].id, coach_id=coaches[1].id, notes="Got back with abusive ex", goal_progress=6),
+        Session(date=datetime(2024, 10, 25, 1, 0), client_id=clients[2].id, coach_id=coaches[2].id, notes="Got stronger socially", goal_progress=4),
+        Session(date=datetime(2024, 10, 19, 9, 0), client_id=clients[3].id, coach_id=coaches[0].id, notes="Working on setting boundaries", goal_progress=7),
+        Session(date=datetime(2024, 10, 19, 10, 0), client_id=clients[4].id, coach_id=coaches[0].id, notes="Building confidence", goal_progress=9),
+        Session(date=datetime(2024, 10, 20, 11, 0), client_id=clients[5].id, coach_id=coaches[1].id, notes="Coping with social anxiety", goal_progress=6),
+        Session(date=datetime(2024, 10, 20, 9, 0), client_id=clients[6].id, coach_id=coaches[1].id, notes="Recovering from trauma", goal_progress=8),
+        Session(date=datetime(2024, 10, 21, 10, 0), client_id=clients[7].id, coach_id=coaches[2].id, notes="Managing chronic stress", goal_progress=7),
+        Session(date=datetime(2024, 10, 21, 11, 0), client_id=clients[8].id, coach_id=coaches[2].id, notes="Enhancing focus", goal_progress=8),
+        Session(date=datetime(2024, 10, 22, 9, 0), client_id=clients[9].id, coach_id=coaches[3].id, notes="Overcoming fear of public speaking", goal_progress=6),
+        Session(date=datetime(2024, 10, 22, 10, 0), client_id=clients[10].id, coach_id=coaches[3].id, notes="Developing mindfulness habits", goal_progress=9),
+        Session(date=datetime(2024, 10, 23, 11, 0), client_id=clients[11].id, coach_id=coaches[4].id, notes="Working through childhood trauma", goal_progress=8),
+        Session(date=datetime(2024, 10, 23, 9, 0), client_id=clients[12].id, coach_id=coaches[4].id, notes="Healing from abusive relationship", goal_progress=7),
+        Session(date=datetime(2024, 10, 24, 10, 0), client_id=clients[13].id, coach_id=coaches[5].id, notes="Managing anxiety from past experiences", goal_progress=6),
+        Session(date=datetime(2024, 10, 24, 11, 0), client_id=clients[14].id, coach_id=coaches[5].id, notes="Improving stress management", goal_progress=9),
+    ]   
 
     # adding more sessions for each coach anf spreading thenm out
     additional_sessions = []
     for i, coach in enumerate(coaches):
         for j in range(10):
+            # Spread out sessions in October, adjusting the dates and times
+            day_offset = j // 2 + 1  # Spreading sessions across different days
+            hour_offset = 9 + (j % 3)  # Changing the hours for variety
             additional_sessions.append(
                 Session(
-                    date=datetime(2024, 9, 26 + j // 2, 9 + j % 3, 0),  
+                    date=datetime(2024, 10, day_offset + i, hour_offset, 0),  # Adjusted to October
                     client_id=clients[(i + j) % len(clients)].id,  # Rotating through clients
                     coach_id=coach.id,
                     notes=f"Session with {clients[(i + j) % len(clients)].name}",
