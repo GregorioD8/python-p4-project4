@@ -195,10 +195,11 @@ class SessionsById(Resource):
 
 api.add_resource(SessionsById, '/sessions/<int:session_id>')
 
-@app.route('/coaches/<int:coach_id>/clients')
-def get_clients_for_coach(coach_id):
+@app.route('/coaches/<int:coach_id>/clients_with_sessions', methods=['GET'])
+def get_clients_with_sessions_for_coach(coach_id):
     try:
-        clients = db.session.query(Client).join(CoachClient).filter(CoachClient.coach_id == coach_id).distinct().all()
+        # Get clients that the coach has sessions with
+        clients = db.session.query(Client).join(Session).filter(Session.coach_id == coach_id).distinct().all()
         client_list = [client.to_dict(only=('id', 'name')) for client in clients]
         return jsonify(client_list), 200
     except Exception as e:

@@ -2,34 +2,41 @@ import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "./AuthContext";
 import SessionForm from "./SessionForm";
 import Calendar from "./Calendar";
-import MockPaymentForm from "./MockPaymentForm";
-import '../index.css';  // Corrected import for the CSS file
 
-const CoachDashboard = ({ clients }) => {
-  const { coachId } = useContext(AuthContext);
+const CoachDashboard = () => {
+  const { coachId } = useContext(AuthContext); // Get the logged-in coach's ID
   const [sessions, setSessions] = useState([]);
+  const [clients, setClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState("");
   const [refreshPage, setRefreshPage] = useState(false);
   const [paymentSession, setPaymentSession] = useState(null);
 
+  // Fetch clients and sessions based on the logged-in coach
   useEffect(() => {
     if (coachId) {
+      // Fetch clients who have scheduled sessions with the logged-in coach
+      fetch(`http://127.0.0.1:5000/coaches/${coachId}/clients_with_sessions`)
+        .then((res) => res.json())
+        .then((data) => setClients(data))
+        .catch((error) => console.error("Error fetching clients:", error));
+
+      // Fetch sessions for the logged-in coach (with or without selected client)
       const url = selectedClient
         ? `http://127.0.0.1:5000/coaches/${coachId}/sessions?client_id=${selectedClient}`
         : `http://127.0.0.1:5000/coaches/${coachId}/sessions`;
 
       fetch(url)
-        .then(res => res.json())
-        .then(data => setSessions(data))
-        .catch(error => console.error("Error fetching sessions:", error));
+        .then((res) => res.json())
+        .then((data) => setSessions(data))
+        .catch((error) => console.error("Error fetching sessions:", error));
     }
   }, [coachId, selectedClient, refreshPage]);
 
-  const handleClientChange = e => {
+  const handleClientChange = (e) => {
     setSelectedClient(e.target.value);
   };
 
-  const handleUpdateNotes = sessionId => {
+  const handleUpdateNotes = (sessionId) => {
     const newNotes = prompt("Enter new notes:");
     if (!newNotes || newNotes.trim() === "") {
       alert("Notes cannot be empty.");
@@ -42,14 +49,14 @@ const CoachDashboard = ({ clients }) => {
       },
       body: JSON.stringify({ notes: newNotes }),
     })
-      .then(res => res.json())
+      .then((res) => res.json())
       .then(() => setRefreshPage(!refreshPage));
   };
 
-  const handleDeleteSession = sessionId => {
+  const handleDeleteSession = (sessionId) => {
     fetch(`http://127.0.0.1:5000/sessions/${sessionId}`, {
       method: "DELETE",
-    }).then(res => {
+    }).then((res) => {
       if (res.status === 204) {
         setRefreshPage(!refreshPage);
       } else {
@@ -59,7 +66,7 @@ const CoachDashboard = ({ clients }) => {
   };
 
   const handlePayment = (sessionId) => {
-    const session = sessions.find(session => session.id === sessionId);
+    const session = sessions.find((session) => session.id === sessionId);
     setPaymentSession(session);
   };
 
@@ -69,7 +76,6 @@ const CoachDashboard = ({ clients }) => {
     })
       .then((res) => {
         if (res.status === 200) {
-          // Update the specific session's payment status directly
           setSessions((prevSessions) =>
             prevSessions.map((session) =>
               session.id === sessionId ? { ...session, paid: true } : session
@@ -111,7 +117,7 @@ const CoachDashboard = ({ clients }) => {
             value={selectedClient}
           >
             <option value="" label="All Clients" />
-            {clients.map(client => (
+            {clients.map((client) => (
               <option key={client.id} value={client.id}>
                 {client.name}
               </option>
