@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "./AuthContext";
 import SessionForm from "./SessionForm";
 import Calendar from "./Calendar";
-
+import MockPaymentForm from './MockPaymentForm';
 const CoachDashboard = () => {
   const { coachId } = useContext(AuthContext); // Get the logged-in coach's ID
   const [sessions, setSessions] = useState([]);
