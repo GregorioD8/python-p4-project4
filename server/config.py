@@ -1,19 +1,44 @@
-# Standard library imports
-
-# Remote library imports
+import os
 from flask import Flask
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
+from dotenv import load_dotenv
+import boto3
+import json
 
-# Local imports
+# Load environment variables from .env file
+load_dotenv()
+
+def get_secret():
+    secret_name = "your-secret-name"  # Replace with your actual secret name in AWS Secrets Manager
+    region_name = "your-region"       # Replace with the region your RDS database is in
+
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(service_name='secretsmanager', region_name=region_name)
+
+    try:
+        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
+        secret = get_secret_value_response['SecretString']
+        secret_dict = json.loads(secret)
+    except Exception as e:
+        raise e
+
+    return secret_dict
+
+# Fetch secrets from AWS Secrets Manager
+secrets = get_secret()
 
 # Instantiate app, set attributes
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+
+# Configure the app using environment variables for secure and dynamic configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{secrets['username']}:{secrets['password']}@{secrets['host']}:{secrets['port']}/{secrets['dbname']}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_fallback_secret_key')
 app.json.compact = False
 
 # Define metadata, instantiate db
