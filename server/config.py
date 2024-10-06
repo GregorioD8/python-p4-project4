@@ -12,9 +12,10 @@ import json
 # Load environment variables from .env file
 load_dotenv()
 
+# Fetch from .env file
 def get_secret():
-    secret_name = os.getenv('SECRET_NAME')  # Fetch from .env file
-    region_name = os.getenv('REGION_NAME')  # Fetch from .env file
+    secret_name = os.getenv('SECRET_NAME')  
+    region_name = os.getenv('AWS_REGION')  
 
     # Create a Secrets Manager client
     session = boto3.session.Session()
@@ -38,7 +39,9 @@ app = Flask(__name__)
 # Configure the app using the secrets fetched from AWS Secrets Manager
 app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{secrets['username']}:{secrets['password']}@{secrets['host']}:{secrets['port']}/{secrets['dbname']}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_fallback_secret_key')
+
+# Fetch secret key from Secrets Manager
+app.config['SECRET_KEY'] = secrets['secret_key']
 app.json.compact = False
 
 # Define metadata, instantiate db
