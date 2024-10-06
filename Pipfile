@@ -14,6 +14,7 @@ flask-restful = "*"
 flask-cors = "*"
 faker = "*"
 flask-login = "*"
+boto3 = "*"
 
 [requires]
 python_full_version = "3.8.13"

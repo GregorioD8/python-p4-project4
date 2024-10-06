@@ -13,8 +13,8 @@ import json
 load_dotenv()
 
 def get_secret():
-    secret_name = "your-secret-name"  # Replace with your actual secret name in AWS Secrets Manager
-    region_name = "your-region"       # Replace with the region your RDS database is in
+    secret_name = os.getenv('SECRET_NAME')  # Fetch from .env file
+    region_name = os.getenv('REGION_NAME')  # Fetch from .env file
 
     # Create a Secrets Manager client
     session = boto3.session.Session()
@@ -35,7 +35,7 @@ secrets = get_secret()
 # Instantiate app, set attributes
 app = Flask(__name__)
 
-# Configure the app using environment variables for secure and dynamic configuration
+# Configure the app using the secrets fetched from AWS Secrets Manager
 app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{secrets['username']}:{secrets['password']}@{secrets['host']}:{secrets['port']}/{secrets['dbname']}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_fallback_secret_key')
