@@ -12,16 +12,17 @@ import json
 # Load environment variables from .env file
 load_dotenv()
 
-# Fetch from .env file
+# Fetch secrets from AWS Secrets Manager
 def get_secret():
-    secret_name = os.getenv('SECRET_NAME')  
-    region_name = os.getenv('AWS_REGION')  
+    secret_name = os.getenv('SECRET_NAME')  # Get secret name from .env
+    region_name = os.getenv('AWS_REGION')   # Get region name from .env
 
     # Create a Secrets Manager client
     session = boto3.session.Session()
     client = session.client(service_name='secretsmanager', region_name=region_name)
 
     try:
+        # Fetch secret
         get_secret_value_response = client.get_secret_value(SecretId=secret_name)
         secret = get_secret_value_response['SecretString']
         secret_dict = json.loads(secret)
@@ -33,15 +34,17 @@ def get_secret():
 # Fetch secrets from AWS Secrets Manager
 secrets = get_secret()
 
-# Instantiate app, set attributes
+# Instantiate Flask app
 app = Flask(__name__)
 
 # Configure the app using the secrets fetched from AWS Secrets Manager
 app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{secrets['username']}:{secrets['password']}@{secrets['host']}:{secrets['port']}/{secrets['dbname']}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Fetch secret key from Secrets Manager
-app.config['SECRET_KEY'] = secrets['secret_key']
+# Fetch and configure secret key from Secrets Manager
+app.config['SECRET_KEY'] = secrets.get('secret_key')
+
+# Enable JSON pretty print
 app.json.compact = False
 
 # Define metadata, instantiate db
@@ -56,5 +59,5 @@ db.init_app(app)
 # Instantiate REST API
 api = Api(app)
 
-# Instantiate CORS
+# Enable CORS
 CORS(app)
