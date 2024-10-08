@@ -1,20 +1,20 @@
 import os
+from dotenv import load_dotenv
+import boto3
+import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
-from dotenv import load_dotenv
-import boto3
-import json
 from datetime import datetime
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from config import db, app
 
 # Load environment variables from .env file
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 
 # Fetch secrets from AWS Secrets Manager
 def get_secret():
@@ -38,9 +38,6 @@ def get_secret():
 # Fetch secrets from AWS Secrets Manager
 secrets = get_secret()
 
-# Instantiate Flask app
-app = Flask(__name__)
-
 # Configure the app using the secrets fetched from AWS Secrets Manager
 app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{secrets['username']}:{secrets['password']}@{secrets['host']}:{secrets['port']}/{secrets['dbname']}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -51,14 +48,7 @@ app.config['SECRET_KEY'] = secrets.get('secret_key')
 # Enable JSON pretty print
 app.json.compact = False
 
-# Define metadata, instantiate db
-metadata = MetaData(naming_convention={
-    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-})
-
-# Initialize SQLAlchemy and Migrate
-db = SQLAlchemy(metadata=metadata)
-db.init_app(app)
+# Initialize Migrate
 migrate = Migrate(app, db)
 
 # Initialize login manager
