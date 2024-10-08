@@ -24,7 +24,15 @@ def get_secret():
         secret = get_secret_value_response['SecretString']
         secret_dict = json.loads(secret)
     except Exception as e:
+        print(f"Error fetching secret: {e}")
         raise e
+
+
+    # Check for required keys
+    required_keys = ['username', 'password', 'host', 'port', 'dbname', 'secret_key']
+    for key in required_keys:
+        if key not in secret_dict:
+            raise KeyError(f"Missing required key in secrets: {key}")
 
     return secret_dict
 
