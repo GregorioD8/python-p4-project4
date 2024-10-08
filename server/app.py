@@ -1,20 +1,66 @@
+import os
 from flask import Flask, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
-from models import db, Client, Coach, Session, CoachClient
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import MetaData
+from dotenv import load_dotenv
+import boto3
+import json
 from datetime import datetime
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-import os
 
+# Load environment variables from .env file
+load_dotenv()
+
+# Fetch secrets from AWS Secrets Manager
+def get_secret():
+    secret_name = os.getenv('SECRET_NAME')  # Get secret name from .env
+    region_name = os.getenv('AWS_REGION')   # Get region name from .env
+
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(service_name='secretsmanager', region_name=region_name)
+
+    try:
+        # Fetch secret
+        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
+        secret = get_secret_value_response['SecretString']
+        secret_dict = json.loads(secret)
+    except Exception as e:
+        raise e
+
+    return secret_dict
+
+# Fetch secrets from AWS Secrets Manager
+secrets = get_secret()
+
+# Instantiate Flask app
 app = Flask(__name__)
+
+# Configure the app using the secrets fetched from AWS Secrets Manager
+app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{secrets['username']}:{secrets['password']}@{secrets['host']}:{secrets['port']}/{secrets['dbname']}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Fetch and configure secret key from Secrets Manager
+app.config['SECRET_KEY'] = secrets.get('secret_key')
 
+# Enable JSON pretty print
+app.json.compact = False
+
+# Define metadata, instantiate db
+metadata = MetaData(naming_convention={
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+})
+
+# Initialize SQLAlchemy and Migrate
+db = SQLAlchemy(metadata=metadata)
 db.init_app(app)
+migrate = Migrate(app, db)
 
+# Initialize login manager
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -23,14 +69,16 @@ login_manager.login_view = 'login'
 def load_user(coach_id):
     return Coach.query.get(int(coach_id))
 
+# Enable CORS
 CORS(app)
-migrate = Migrate(app, db)
+
+# Instantiate REST API
 api = Api(app)
 
-@app.route('/')
-def home():
-    return '<h1>Welcome to the Coaching App API</h1>'
+# Import your models AFTER initializing app, db, etc.
+from models import Client, Coach, Session, CoachClient
 
+# Define your resource classes
 class Clients(Resource):
     def get(self):
         try:
@@ -51,8 +99,6 @@ class Clients(Resource):
             return new_client.to_dict(only=('id', 'name', 'goals')), 201
         except Exception as e:
             return {'error': str(e)}, 400
-
-api.add_resource(Clients, '/clients')
 
 class ClientsById(Resource):
     def get(self, id):
@@ -88,8 +134,6 @@ class ClientsById(Resource):
         except Exception as e:
             return {'error': 'Client not found', 'message': str(e)}, 404
 
-api.add_resource(ClientsById, '/clients/<int:id>')
-
 class Coaches(Resource):
     def get(self):
         try:
@@ -111,8 +155,6 @@ class Coaches(Resource):
             return new_coach.to_dict(only=('id', 'name', 'specialization', 'username')), 201
         except Exception as e:
             return {'errors': ['validation errors', str(e)]}, 400
-
-api.add_resource(Coaches, '/coaches')
 
 class Sessions(Resource):
     def get(self):
@@ -161,8 +203,6 @@ class Sessions(Resource):
             print("Error when creating a new session:", str(e))
             return {'errors': ['validation errors', str(e)]}, 400
 
-api.add_resource(Sessions, '/sessions')
-
 class SessionsById(Resource):
     def patch(self, session_id):
         try:
@@ -192,43 +232,6 @@ class SessionsById(Resource):
         except Exception as e:
             return {'error': 'Session not found', 'message': str(e)}, 404
 
-api.add_resource(SessionsById, '/sessions/<int:session_id>')
-
-@app.route('/coaches/<int:coach_id>/clients_with_sessions', methods=['GET'])
-def get_clients_with_sessions_for_coach(coach_id):
-    try:
-        # Get clients that the coach has sessions with
-        clients = db.session.query(Client).join(Session).filter(Session.coach_id == coach_id).distinct().all()
-        client_list = [client.to_dict(only=('id', 'name')) for client in clients]
-        return jsonify(client_list), 200
-    except Exception as e:
-        return {'error': 'Bad request', 'message': str(e)}, 400
-    
-@app.route('/coaches/<int:coach_id>/sessions')
-def get_sessions_for_coach(coach_id):
-    try:
-        client_id = request.args.get('client_id')
-        query = db.session.query(Session, Client, Coach)\
-                          .join(Client, Session.client_id == Client.id)\
-                          .join(Coach, Session.coach_id == Coach.id)\
-                          .filter(Session.coach_id == coach_id)
-        
-        if (client_id):
-            query = query.filter(Session.client_id == client_id)
-        
-        sessions = query.all()
-        session_list = [{
-            'id': s.Session.id,
-            'date': s.Session.date.strftime('%Y-%m-%d %H:%M:%S'),
-            'client_name': s.Client.name,
-            'coach_name': s.Coach.name,
-            'notes': s.Session.notes,
-            'goal_progress': s.Session.goal_progress
-        } for s in sessions]
-        return jsonify(session_list), 200
-    except Exception as e:
-        return {'error': 'Bad request', 'message': str(e)}, 400
-
 class CoachClientResource(Resource):
     def get(self):
         try:
@@ -250,59 +253,13 @@ class CoachClientResource(Resource):
         except Exception as e:
             return {'errors': ['validation errors', str(e)]}, 400
 
+# Add resources to the API
+api.add_resource(Clients, '/clients')
+api.add_resource(ClientsById, '/clients/<int:id>')
+api.add_resource(Coaches, '/coaches')
+api.add_resource(Sessions, '/sessions')
+api.add_resource(SessionsById, '/sessions/<int:session_id>')
 api.add_resource(CoachClientResource, '/coach_clients')
 
-@app.route('/sessions/<int:session_id>/pay', methods=['POST'])
-def pay_for_session(session_id):
-    try:
-        # Find the session by ID
-        session = Session.query.get_or_404(session_id)
-
-        # Mark the session as paid
-        session.paid_status = True
-
-        # Commit the change to the database
-        db.session.commit()
-
-        return jsonify({'message': 'Payment successful', 'paid_status': session.paid_status}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
-    
-
-@app.route('/login', methods=['POST'])
-def login():
-    data = request.json
-    coach = Coach.query.filter_by(username=data['username']).first()
-    
-    if coach and coach.check_password(data['password']):
-        login_user(coach) 
-        return jsonify({
-            'message': 'Logged in successfully',
-            'coach_id': coach.id,
-            'coach_name': coach.name  
-        }), 200
-
-    return jsonify({'message': 'Invalid credentials'}), 401
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return jsonify({'message': 'Logged out successfully'}), 200
-
-@app.route('/register', methods=['POST'])
-def register():
-    data = request.json
-    hashed_password = generate_password_hash(data['password'], method='sha256')
-    new_coach = Coach(username=data['username'], password_hash=hashed_password, name=data.get('name'), specialization=data.get('specialization'))
-    db.session.add(new_coach)
-    db.session.commit()
-    return jsonify({'message': 'Coach registered successfully'}), 201
-
-@app.route('/protected')
-@login_required
-def protected():
-    return jsonify({'message': 'This is a protected route, accessible only to logged-in users'})
-
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True, host='0.0.0.0')
