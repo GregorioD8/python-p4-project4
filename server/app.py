@@ -14,7 +14,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from config import db, app
 
 # Load environment variables from .env file
-load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '../.env'))
 
 # Fetch secrets from AWS Secrets Manager
 def get_secret():
