@@ -11,6 +11,7 @@ import json
 from datetime import datetime
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from config import db, app
 
 # Load environment variables from .env file
 load_dotenv()
