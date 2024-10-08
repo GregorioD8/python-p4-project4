@@ -55,3 +55,8 @@ class Config:
 
 # Migrate configuration
 migrate = Migrate()
+
+# Function to initialize migration
+def init_app(app):
+    db.init_app(app)
+    migrate.init_app(app, db)
