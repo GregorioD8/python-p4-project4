@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 import boto3
 import json
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from flask_migrate import Migrate
@@ -26,7 +27,6 @@ def get_secret():
     except Exception as e:
         print(f"Error fetching secret: {e}")
         raise e
-
 
     # Check for required keys
     required_keys = ['username', 'password', 'host', 'port', 'dbname', 'secret_key']
@@ -56,7 +56,13 @@ class Config:
 # Migrate configuration
 migrate = Migrate()
 
-# Function to initialize migration
-def init_app(app):
-    db.init_app(app)
-    migrate.init_app(app, db)
+# Create and configure Flask app
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Register the app with db and migrate
+db.init_app(app)
+migrate.init_app(app, db)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
