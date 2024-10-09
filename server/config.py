@@ -2,7 +2,6 @@ import os
 from dotenv import load_dotenv
 import boto3
 import json
-from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 
@@ -54,10 +53,3 @@ class Config:
         SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'instance', 'app.db')}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = secrets.get('secret_key')
-
-# Create and configure Flask app
-app = Flask(__name__)
-app.config.from_object(Config)
-
-# Register the app with db
-db.init_app(app)
