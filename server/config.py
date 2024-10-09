@@ -5,7 +5,6 @@ import json
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
-from flask_migrate import Migrate
 
 # Load environment variables from .env file
 load_dotenv()
@@ -49,20 +48,16 @@ db = SQLAlchemy(metadata=metadata)
 
 # Flask app configuration using secrets fetched from AWS Secrets Manager
 class Config:
-    SQLALCHEMY_DATABASE_URI = f"postgresql://{secrets['username']}:{secrets['password']}@{secrets['host']}:{secrets['port']}/{secrets['dbname']}"
+    if os.getenv('FLASK_ENV') == 'production':
+        SQLALCHEMY_DATABASE_URI = f"postgresql://{secrets['username']}:{secrets['password']}@{secrets['host']}:{secrets['port']}/{secrets['dbname']}"
+    else:
+        SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'instance', 'app.db')}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = secrets.get('secret_key')
-
-# Migrate configuration
-migrate = Migrate()
 
 # Create and configure Flask app
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# Register the app with db and migrate
+# Register the app with db
 db.init_app(app)
-migrate.init_app(app, db)
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)

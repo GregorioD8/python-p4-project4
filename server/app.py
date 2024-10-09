@@ -1,55 +1,19 @@
-import os
 from dotenv import load_dotenv
-import boto3
-import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import MetaData
-from datetime import datetime
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from config import db, app
+from models import Client, Coach, Session, CoachClient
+from datetime import datetime
 
 # Load environment variables from .env file
-load_dotenv('../.env')
+load_dotenv()
 
-# Fetch secrets from AWS Secrets Manager
-def get_secret():
-    secret_name = os.getenv('SECRET_NAME')  # Get secret name from .env
-    region_name = os.getenv('AWS_REGION')   # Get region name from .env
-
-    # Create a Secrets Manager client
-    session = boto3.session.Session()
-    client = session.client(service_name='secretsmanager', region_name=region_name)
-
-    try:
-        # Fetch secret
-        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
-        secret = get_secret_value_response['SecretString']
-        secret_dict = json.loads(secret)
-    except Exception as e:
-        raise e
-
-    return secret_dict
-
-# Fetch secrets from AWS Secrets Manager
-secrets = get_secret()
-
-# Configure the app using the secrets fetched from AWS Secrets Manager
-app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{secrets['username']}:{secrets['password']}@{secrets['host']}:{secrets['port']}/{secrets['dbname']}"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Fetch and configure secret key from Secrets Manager
-app.config['SECRET_KEY'] = secrets.get('secret_key')
-
-# Enable JSON pretty print
-app.json.compact = False
-
-# Initialize Migrate
-migrate = Migrate(app, db)
+# Enable CORS
+CORS(app)
 
 # Initialize login manager
 login_manager = LoginManager()
@@ -60,14 +24,11 @@ login_manager.login_view = 'login'
 def load_user(coach_id):
     return Coach.query.get(int(coach_id))
 
-# Enable CORS
-CORS(app)
+# Initialize Flask-Migrate
+migrate = Migrate(app, db)
 
 # Instantiate REST API
 api = Api(app)
-
-# Import your models AFTER initializing app, db, etc.
-from models import Client, Coach, Session, CoachClient
 
 # Define your resource classes
 class Clients(Resource):
@@ -94,7 +55,7 @@ class Clients(Resource):
 class ClientsById(Resource):
     def get(self, id):
         try:
-            client = Client.query.filter_by(id=id).first()
+            client = Client.query.get(id)
             if not client:
                 return {'error': 'Client not found'}
             return client.to_dict(only=('id', 'name', 'goals', 'sessions')), 200
@@ -103,7 +64,7 @@ class ClientsById(Resource):
 
     def patch(self, id):
         try:
-            client = Client.query.filter_by(id=id).first()
+            client = Client.query.get(id)
             if not client:
                 return {'error': 'Client not found'}, 404
             data = request.json
@@ -116,7 +77,7 @@ class ClientsById(Resource):
 
     def delete(self, id):
         try:
-            client = Client.query.filter_by(id=id).first()
+            client = Client.query.get(id)
             if not client:
                 return {'error': 'Client not found'}
             db.session.delete(client)
@@ -182,16 +143,8 @@ class Sessions(Resource):
             )
             db.session.add(new_session)
             db.session.commit()
-            return {
-                'id': new_session.id,
-                'date': new_session.date.strftime('%Y-%m-%d %H:%M:%S'),
-                'notes': new_session.notes,
-                'goal_progress': new_session.goal_progress,
-                'coach_name': new_session.coach.name,
-                'client_name': new_session.client.name,
-            }, 201
+            return new_session.to_dict(), 201
         except Exception as e:
-            print("Error when creating a new session:", str(e))
             return {'errors': ['validation errors', str(e)]}, 400
 
 class SessionsById(Resource):
@@ -202,15 +155,7 @@ class SessionsById(Resource):
             for key, value in data.items():
                 setattr(session, key, value)
             db.session.commit()
-            session_data = {
-                'id': session.id,
-                'date': session.date.strftime('%Y-%m-%d %H:%M:%S'),
-                'notes': session.notes,
-                'goal_progress': session.goal_progress,
-                'coach': session.coach.to_dict(only=('id', 'name')),
-                'client': session.client.to_dict(only=('id', 'name'))
-            }
-            return session_data, 200
+            return session.to_dict(), 200
         except Exception as e:
             return {'errors': ['validation errors', str(e)]}, 400
 
