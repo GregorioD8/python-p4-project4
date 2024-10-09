@@ -1,7 +1,7 @@
-from app import app
-from models import db, Coach, Client, Session, CoachClient
+from config import app, db
+from models import Coach, Client, Session, CoachClient
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 from werkzeug.security import generate_password_hash
 
 def create_coaches():
@@ -85,13 +85,7 @@ def create_coach_clients(coaches, clients):
         CoachClient(coach_id=coaches[2].id, client_id=clients[2].id, notes="Review session"),
     ]
     return coach_clients
-
 if __name__ == '__main__':
-    db_path = os.path.join(os.path.dirname(__file__), 'app.db')
-
-    if os.path.exists(db_path):
-        os.remove(db_path)
-
     with app.app_context():
         print('Creating a new database...')
         db.create_all()
@@ -101,17 +95,14 @@ if __name__ == '__main__':
         db.session.add_all(coaches)
         db.session.commit()
 
-        print("Seeding clients...")
         clients = create_clients()
         db.session.add_all(clients)
         db.session.commit()
 
-        print("Seeding sessions...")
         sessions = create_sessions(coaches, clients)
         db.session.add_all(sessions)
         db.session.commit()
 
-        print("Seeding coach-client relationships...")
         coach_clients = create_coach_clients(coaches, clients)
         db.session.add_all(coach_clients)
         db.session.commit()
