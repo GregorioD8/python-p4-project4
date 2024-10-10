@@ -3,14 +3,17 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_login import LoginManager
 from werkzeug.security import generate_password_hash, check_password_hash
-from config import db, app
+from config import create_app, db
 from models import Client, Coach, Session, CoachClient
 from datetime import datetime
 
 # Load environment variables from .env file
 load_dotenv('../.env')
+
+# Create Flask app
+app = create_app()
 
 # Enable CORS
 CORS(app)
@@ -32,6 +35,7 @@ migrate = Migrate(app, db)
 
 # Instantiate REST API
 api = Api(app)
+
 
 # Define resource classes
 class Clients(Resource):
